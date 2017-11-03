@@ -199,7 +199,7 @@ EOF"
 	echo "### Install cmake ###"
 	echo "#####################"
 
-	sudo yum install -y cmake
+	sudo yum install -y cmake3
 	#scl enable devtoolset-6 bash
 }
 

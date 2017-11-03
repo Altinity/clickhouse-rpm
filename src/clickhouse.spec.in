@@ -76,6 +76,20 @@ This package contains compressor utility for ClickHouse DBMS.
 # @CH_VERSION@="1.1.54289"
 # @CH_TAG@="stable"
 %setup -q -n ClickHouse-%{version}-@CH_TAG@
+git init
+git config -f .gitmodules --get-regexp '^submodule\..*\.path$' |
+    while read path_key path
+    do
+        rm -rf $path
+        url_key=$(echo $path_key | sed 's/\.path/.url/')
+        url=$(git config -f .gitmodules --get "$url_key")
+        if [[ $url == *ClickHouse-Extras* ]]
+        then
+            git submodule add -b clickhouse $url $path
+        else
+            git submodule add $url $path
+        fi
+    done
 CH_VERSION=@CH_VERSION@
 CH_VERSION_ARR=(${CH_VERSION//./ })
 # prepare cmake files
@@ -88,7 +102,7 @@ sed -i -- "s/VERSION_DESCRIBE .*)/VERSION_DESCRIBE v@CH_VERSION@-@CH_TAG@)/g" db
 rm -rf build
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE:STRING=Release
+cmake3 .. -DCMAKE_BUILD_TYPE:STRING=Release
 make %{?_smp_mflags}
 cd ..
 
@@ -98,7 +112,7 @@ rm -rf %{buildroot}
 cd build
 DAEMONS="clickhouse clickhouse-compressor clickhouse-client clickhouse-server"
 for daemon in $DAEMONS; do \
-        DESTDIR=%{buildroot} cmake -DCOMPONENT=$daemon -P cmake_install.cmake; \
+        DESTDIR=%{buildroot} cmake3 -DCOMPONENT=$daemon -P cmake_install.cmake; \
 done
 cd ..
 
