@@ -9,7 +9,7 @@
 #  - build user needs to have sudo priviledges, preferrably with NOPASSWD
 #
 # Tested on:
-#  - CentOS 6: 6.9
+#  - CentOS 6: 6.9 6.10
 #  - CentOS 7: 7.4, 7.5
 #
 # Copyright (C) 2016 Red Soft LLC
@@ -28,7 +28,7 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-1.1.54385}"
+CH_VERSION="${CH_VERSION:-1.1.54388}"
 
 # Git tag marker (stable/testing)
 CH_TAG="${CH_TAG:-stable}"

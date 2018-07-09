@@ -165,11 +165,11 @@ mkdir -p %{buildroot}/usr/share/clickhouse/bin
 mkdir -p %{buildroot}/usr/share/clickhouse/headers
 
 # copy files from source into folders structure for distribution
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.init   %{buildroot}/etc/init.d/clickhouse-server
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.cron.d %{buildroot}/etc/cron.d/clickhouse-server
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse.limits        %{buildroot}/etc/security/limits.d/clickhouse.conf
-cp %{_builddir}/%{buildsubdir}/dbms/src/Server/config.xml      %{buildroot}/etc/clickhouse-server/
-cp %{_builddir}/%{buildsubdir}/dbms/src/Server/users.xml       %{buildroot}/etc/clickhouse-server/
+cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.init	%{buildroot}/etc/init.d/clickhouse-server
+cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.cron.d	%{buildroot}/etc/cron.d/clickhouse-server
+cp %{_builddir}/%{buildsubdir}/debian/clickhouse.limits		%{buildroot}/etc/security/limits.d/clickhouse.conf
+cp %{_builddir}/%{buildsubdir}/dbms/programs/server/config.xml	%{buildroot}/etc/clickhouse-server/
+cp %{_builddir}/%{buildsubdir}/dbms/programs/server/users.xml	%{buildroot}/etc/clickhouse-server/
 
 ##
 ## clean stage
@@ -229,6 +229,7 @@ chown -R ${CLICKHOUSE_USER}:${CLICKHOUSE_GROUP} /etc/clickhouse-client || true
 /usr/bin/clickhouse-lld
 /usr/bin/clickhouse-copier
 /usr/bin/clickhouse-report
+/usr/bin/clickhouse-obfuscator
 # TODO
 #/etc/systemd/system/clickhouse-server.service
 /etc/init.d/clickhouse-server
