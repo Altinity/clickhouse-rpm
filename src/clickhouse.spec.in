@@ -116,15 +116,6 @@ This package contains test suite for ClickHouse DBMS
 # Do not delete ClickHouse-%{version}-@CH_TAG@ folder, ido not cope, do not unpack .zip archives, just cd into BUILD/ClickHouse-%{version}-@CH_TAG@
 #%setup -D -T -n ClickHouse-%{version}-@CH_TAG@
 
-# we are in BUILD/ClickHouse-%{version}-@CH_TAG@ folder now
-CH_VERSION=@CH_VERSION@
-CH_VERSION_ARR=(${CH_VERSION//./ })
-# prepare cmake files
-# VERSION_REVISION=54289
-sed -i -- "s/VERSION_REVISION .*)/VERSION_REVISION ${CH_VERSION_ARR[2]})/g"   dbms/cmake/version.cmake
-# VERSION_DESCRIBE=v1.1.54289-stable
-sed -i -- "s/VERSION_DESCRIBE .*)/VERSION_DESCRIBE v@CH_VERSION@-@CH_TAG@)/g" dbms/cmake/version.cmake
-
 ##
 ## build stage
 ##
