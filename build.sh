@@ -34,10 +34,6 @@ CH_VERSION="${CH_VERSION:-18.10.3}"
 CH_TAG="${CH_TAG:-stable}"
 #CH_TAG="${CH_TAG:-testing}"
 
-# What sources are we going to compile - either download ready release file OR use 'git clone'
-#USE_SOURCES_FROM="releasefile"
-USE_SOURCES_FROM="git"
-
 # Hostname of the server used to publish packages
 SSH_REPO_SERVER="${SSH_REPO_SERVER:-10.81.1.162}"
 
@@ -84,51 +80,7 @@ export PATH=${PATH/"/usr/local/bin:"/}:/usr/local/bin
 . ./src/os.lib.sh
 . ./src/publish_packagecloud.lib.sh
 . ./src/publish_ssh.lib.sh
-
-##
-##
-##
-function set_print_commands()
-{
-	set -x
-}
-
-##
-##
-##
-function banner()
-{
-	# disable print commands
-	set +x
-
-	# write banner
-
-	# all params as one string
-	local str="${*}"
-
-	# str len in chars (not bytes)
-	local char_len=${#str}
-
-	# header has '## ' on the left and ' ##' on the right thus 6 chars longer that the str
-	local head_len=$((char_len+6))
-
-	# build line of required length '###########################'
-	local head=""
-	for i in $(seq 1 ${head_len}); do
-		head="${head}#"
-	done
-
-	# build banner
-	local res="${head}
-## ${str} ##
-${head}"
-
-	# display banner
-	echo "$res"
-
-	# and return back print commands setting
-	set_print_commands
-}
+. ./src/util.lib.sh
 
 ##
 ##
@@ -188,11 +140,11 @@ function install_build_process_dependencies()
 	sudo yum install -y m4 make
 
 	if os_centos; then
-		sudo yum install -y centos-release-scl
-		sudo yum install -y devtoolset-7
-
 		sudo yum install -y epel-release
 		sudo yum install -y cmake3
+
+		sudo yum install -y centos-release-scl
+		sudo yum install -y devtoolset-7
 	elif os_ol; then
 		sudo yum install -y scl-utils
 		sudo yum install -y devtoolset-7
@@ -346,34 +298,6 @@ function build_dependencies()
 }
 
 ##
-##
-##
-function list_RPMs()
-{
-	banner "Looking for RPMs $RPMS_DIR/clickhouse*.rpm"
-	ls -l "$RPMS_DIR"/clickhouse*.rpm
-}
-
-##
-##
-##
-function list_SRPMs()
-{
-	banner "Looking for sRPMs at $SRPMS_DIR/clickhouse*"
-	ls -l "$SRPMS_DIR"/clickhouse*
-}
-
-##
-##
-##
-function mkdirs()
-{
-	banner "Prepare dirs"
-	mkdir -p "$RPMBUILD_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-	mkdir -p "$TMP_DIR"
-}
-
-##
 ## Prepare $RPMBUILD_DIR/SOURCES/ClickHouse-$CH_VERSION-$CH_TAG.zip file
 ##
 function prepare_sources()
@@ -384,42 +308,32 @@ function prepare_sources()
 	echo "Clean sources dir"
 	rm -rf "$SOURCES_DIR"/ClickHouse*
 
-	if [ "$USE_SOURCES_FROM" == "releasefile" ]; then
-		banner "Downloading ClickHouse source archive v${CH_VERSION}-${CH_TAG}.zip"
-		wget --progress=dot:giga "https://github.com/yandex/ClickHouse/archive/v${CH_VERSION}-${CH_TAG}.zip" --output-document="$SOURCES_DIR/ClickHouse-${CH_VERSION}-${CH_TAG}.zip"
+	echo "Cloning from github v${CH_VERSION}-${CH_TAG} into $SOURCES_DIR/ClickHouse-${CH_VERSION}-${CH_TAG}"
 
-	elif [ "$USE_SOURCES_FROM" == "git" ]; then
-		echo "Cloning from github v${CH_VERSION}-${CH_TAG} into $SOURCES_DIR/ClickHouse-${CH_VERSION}-${CH_TAG}"
+	cd "$SOURCES_DIR"
 
-		cd "$SOURCES_DIR"
+	# Go older way because older versions of git (CentOS 6.9, for example) do not understand new syntax of branches etc
+	# Clone specified branch with all submodules into $SOURCES_DIR/ClickHouse-$CH_VERSION-$CH_TAG folder
+	echo "Clone ClickHouse repo"
+	git clone "https://github.com/yandex/ClickHouse" "ClickHouse-${CH_VERSION}-${CH_TAG}"
 
-		# Go older way because older versions of git (CentOS 6.9, for example) do not understand new syntax of branches etc
-		# Clone specified branch with all submodules into $SOURCES_DIR/ClickHouse-$CH_VERSION-$CH_TAG folder
-		echo "Clone ClickHouse repo"
-		git clone "https://github.com/yandex/ClickHouse" "ClickHouse-${CH_VERSION}-${CH_TAG}"
+	cd "ClickHouse-${CH_VERSION}-${CH_TAG}"
 
-		cd "ClickHouse-${CH_VERSION}-${CH_TAG}"
+	echo "Checkout specific tag v${CH_VERSION}-${CH_TAG}"
+	git checkout "v${CH_VERSION}-${CH_TAG}"
 
-		echo "Checkout specific tag v${CH_VERSION}-${CH_TAG}"
-		git checkout "v${CH_VERSION}-${CH_TAG}"
+	echo "Update submodules"
+	git submodule update --init --recursive
 
-		echo "Update submodules"
-		git submodule update --init --recursive
+	cd "$SOURCES_DIR"
 
-		cd "$SOURCES_DIR"
+	echo "Move files into .zip with minimal compression"
+	zip -r0mq "ClickHouse-${CH_VERSION}-${CH_TAG}.zip" "ClickHouse-${CH_VERSION}-${CH_TAG}"
 
-		echo "Move files into .zip with minimal compression"
-		zip -r0mq "ClickHouse-${CH_VERSION}-${CH_TAG}.zip" "ClickHouse-${CH_VERSION}-${CH_TAG}"
+	echo "Ensure .zip file is available"
+	ls -l "ClickHouse-${CH_VERSION}-${CH_TAG}.zip"
 
-		echo "Ensure .zip file is available"
-		ls -l "ClickHouse-${CH_VERSION}-${CH_TAG}.zip"
-
-		cd "$CWD_DIR"
-
-	else
-		echo "Unknows sources"
-		exit 1
-	fi
+	cd "$CWD_DIR"
 }
 
 ##
@@ -487,8 +401,8 @@ function build_RPMs()
 	cd "$CWD_DIR"
 
 	banner "Build RPMs"
-	rpmbuild -bs "$SPECS_DIR/clickhouse.spec"
-	rpmbuild -bb "$SPECS_DIR/clickhouse.spec"
+	rpmbuild -v -bs "$SPECS_DIR/clickhouse.spec"
+	rpmbuild -v -bb "$SPECS_DIR/clickhouse.spec"
 	banner "Build RPMs completed"
 
 	# Display results
@@ -559,20 +473,6 @@ function usage()
 	echo "./build.sh publish ssh - publish packages via SSH"
 	
 	exit 0
-}
-
-##
-##
-##
-function ensure_os_rpm_based()
-{
-	os_detect
-	if ! os_rpm_based; then
-		echo "We need RPM-based OS in order to build RPM packages."
-		exit 1
-	else
-		echo "RPM-based OS detected, continue"
-	fi
 }
 
 if [ -z "$1" ]; then

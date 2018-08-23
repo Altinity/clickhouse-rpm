@@ -16,6 +16,78 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+##
+##
+##
+function set_print_commands()
+{
+	set -x
+}
+
+##
+##
+##
+function banner()
+{
+	# disable print commands
+	set +x
+
+	# write banner
+
+	# all params as one string
+	local str="${*}"
+
+	# str len in chars (not bytes)
+	local char_len=${#str}
+
+	# header has '## ' on the left and ' ##' on the right thus 6 chars longer that the str
+	local head_len=$((char_len+6))
+
+	# build line of required length '###########################'
+	local head=""
+	for i in $(seq 1 ${head_len}); do
+		head="${head}#"
+	done
+
+	# build banner
+	local res="${head}
+## ${str} ##
+${head}"
+
+	# display banner
+	echo "$res"
+
+	# and return back print commands setting
+	set_print_commands
+}
+
+##
+##
+##
+function list_RPMs()
+{
+	banner "Looking for RPMs $RPMS_DIR/clickhouse*.rpm"
+	ls -l "$RPMS_DIR"/clickhouse*.rpm
+}
+
+##
+##
+##
+function list_SRPMs()
+{
+	banner "Looking for sRPMs at $SRPMS_DIR/clickhouse*"
+	ls -l "$SRPMS_DIR"/clickhouse*
+}
+
+##
+##
+##
+function mkdirs()
+{
+	banner "Prepare dirs"
+	mkdir -p "$RPMBUILD_DIR"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+	mkdir -p "$TMP_DIR"
+}
 
 ##
 ## Print error message and exit with exit code 1
@@ -192,19 +264,5 @@ function os_detect()
 	fi
 
 	echo "OS detected: $OS $DISTR_MAJOR $DISTR_MINOR"
-}
-
-##
-##
-##
-function ensure_os_rpm_based()
-{
-	os_detect
-	if ! os_rpm_based; then
-		echo "We need RPM-based OS in order to build RPM packages."
-		exit 1
-	else
-		echo "RPM-based OS detected, continue"
-	fi
 }
 
