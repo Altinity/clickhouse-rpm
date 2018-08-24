@@ -1,6 +1,11 @@
 # clickhouse-rpm
 Build ClickHouse RPMs
 
+# Ready-to-use RPMs
+In case you'd like to just get ready RPMs look into [this repo](https://packagecloud.io/Altinity/clickhouse)
+
+# Build RPMs
+
 Run `build.sh` on any RHEL 6 or RHEL 7 based distribution and get ClickHouse source and binary RPM packages as an output.
 
 ```bash
@@ -32,5 +37,4 @@ MYSRC=yes ./build.sh rpms - just build RPMs from unpacked sources - most likely 
 
 In most cases just run `./build.sh all`
 
-In case you'd like to just get ready RPMs look into [this repo](https://packagecloud.io/Altinity/clickhouse)
 
