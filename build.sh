@@ -28,11 +28,11 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-18.10.3}"
+CH_VERSION="${CH_VERSION:-18.12.13}"
 
 # Git tag marker (stable/testing)
-CH_TAG="${CH_TAG:-stable}"
-#CH_TAG="${CH_TAG:-testing}"
+#CH_TAG="${CH_TAG:-stable}"
+CH_TAG="${CH_TAG:-testing}"
 
 # Hostname of the server used to publish packages
 SSH_REPO_SERVER="${SSH_REPO_SERVER:-10.81.1.162}"
@@ -75,6 +75,8 @@ export THREADS=$(grep -c ^processor /proc/cpuinfo)
 
 # Build most libraries using default GCC
 export PATH=${PATH/"/usr/local/bin:"/}:/usr/local/bin
+
+# export LD_LIBRARY_PATH=/usr/lib:/usr/local/lib:/opt/rh/devtoolset-7/root/usr/lib64
 
 # Source libraries
 . ./src/os.lib.sh
