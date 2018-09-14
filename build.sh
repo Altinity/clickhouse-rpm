@@ -28,7 +28,7 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-18.12.13}"
+CH_VERSION="${CH_VERSION:-18.12.14}"
 
 # Git tag marker (stable/testing)
 CH_TAG="${CH_TAG:-stable}"
@@ -348,9 +348,10 @@ function build_spec_file()
 
 	banner "Build .spec file"
 
-	CMAKE_OPTIONS="${CMAKE_OPTIONS} -DHAVE_THREE_PARAM_SCHED_SETAFFINITY=1"
-	CMAKE_OPTIONS="${CMAKE_OPTIONS} -DOPENSSL_SSL_LIBRARY=/usr/lib64/libssl.so -DOPENSSL_CRYPTO_LIBRARY=/usr/lib64/libcrypto.so -DOPENSSL_INCLUDE_DIR=/usr/include/openssl"
-	CMAKE_OPTIONS="${CMAKE_OPTIONS} -DNO_WERROR=1"
+	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DHAVE_THREE_PARAM_SCHED_SETAFFINITY=1"
+	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DOPENSSL_SSL_LIBRARY=/usr/lib64/libssl.so -DOPENSSL_CRYPTO_LIBRARY=/usr/lib64/libcrypto.so -DOPENSSL_INCLUDE_DIR=/usr/include/openssl"
+	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DNO_WERROR=1"
+	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DUSE_INTERNAL_ZLIB_LIBRARY=0"
 		  
 	MAKE_OPTIONS="${MAKE_OPTIONS}"
 
