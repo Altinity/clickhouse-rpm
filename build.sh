@@ -139,7 +139,7 @@ function install_build_process_dependencies()
 {
 	banner "Install build tools"
 
-	sudo yum install -y m4 make
+	sudo yum install -y make
 
 	if os_centos; then
 		sudo yum install -y epel-release
