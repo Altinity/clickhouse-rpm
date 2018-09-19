@@ -160,7 +160,7 @@ function install_build_process_dependencies()
 
 	# libicu-devel -  ICU (support for collations and charset conversion functions
 	# libtool-ltdl-devel - cooperate with dynamic libs
-	sudo yum install -y zlib-devel openssl-devel libicu-devel libtool-ltdl-devel unixODBC-devel readline-devel
+	sudo yum install -y libicu-devel libtool-ltdl-devel unixODBC-devel readline-devel
 }
 
 ##
