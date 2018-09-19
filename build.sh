@@ -389,22 +389,6 @@ function build_RPMs()
 %_tmppath '"$TMP_DIR"'
 %_smp_mflags  -j'"$THREADS" > ~/.rpmmacros
 
-	banner "Setup path to compilers"
-	if os_centos || os_ol; then
-		export CMAKE=cmake3
-		export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
-		export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
-		#export CXXFLAGS="${CXXFLAGS} -Wno-maybe-uninitialized"
-	else
-		export CMAKE=cmake
-		export CC=gcc
-		export CXX=g++
-	fi
-
-	echo "CMAKE=$CMAKE"
-	echo "CC=$CC"
-	echo "CXX=$CXX"
-
 	echo "cd into $CWD_DIR"
 	cd "$CWD_DIR"
 
