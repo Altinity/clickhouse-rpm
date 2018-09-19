@@ -43,9 +43,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 Vendor: Yandex
 Packager: Altinity
 Url: https://clickhouse.yandex/
+BuildRequires: libicu-devel libtool-ltdl-devel unixODBC-devel readline-devel MariaDB-devel make
 %if 0%{?rhel} == 6 || 0%{?rhel} == 7
+BuildRequires: devtoolset-7-gcc devtoolset-7-gcc-c++ cmake3
 %define cmake cmake3
 %else
+BuildRequires: gcc gcc-c++ cmake
 %define cmake cmake
 %endif
 
