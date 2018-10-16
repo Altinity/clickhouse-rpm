@@ -28,7 +28,7 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-18.12.17}"
+CH_VERSION="${CH_VERSION:-18.14.8}"
 
 # Git tag marker (stable/testing)
 CH_TAG="${CH_TAG:-stable}"
@@ -348,6 +348,11 @@ function build_spec_file()
 
 	banner "Build .spec file"
 
+	if os_centos_6; then
+		# jemalloc should build as long as the Linux kernel version is >= 2.6.38, otherwise it needs to be disabled.
+		# MADV_HUGEPAGE compilation error encounters
+		CMAKE_OPTIONS="${CMAKE_OPTIONS} -DENABLE_JEMALLOC=0"
+	fi
 	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DHAVE_THREE_PARAM_SCHED_SETAFFINITY=1"
 	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DOPENSSL_SSL_LIBRARY=/usr/lib64/libssl.so -DOPENSSL_CRYPTO_LIBRARY=/usr/lib64/libcrypto.so -DOPENSSL_INCLUDE_DIR=/usr/include/openssl"
 	#CMAKE_OPTIONS="${CMAKE_OPTIONS} -DNO_WERROR=1"
