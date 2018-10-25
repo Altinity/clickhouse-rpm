@@ -28,7 +28,7 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-18.14.8}"
+CH_VERSION="${CH_VERSION:-18.14.10}"
 
 # Git tag marker (stable/testing)
 CH_TAG="${CH_TAG:-stable}"
@@ -566,6 +566,27 @@ elif [ "$COMMAND" == "delete" ]; then
 		echo "Unknown publish target"
 		usage
 	fi
+
+elif [ "$COMMAND" == "sql" ]; then
+	echo "SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1 settings enable_optimize_predicate_expression=0"
+	echo "SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1"
+	echo
+	echo "clickhouse-client -q 'SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1 settings enable_optimize_predicate_expression=0'"
+	echo "clickhouse-client -q 'SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1'"
+
+elif [ "$COMMAND" == "test" ]; then
+	echo "1) SELECT with settings"
+	clickhouse-client -q 'SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1 settings enable_optimize_predicate_expression=0 FORMAT PrettyCompact'
+	echo "2) SELECT w/o settings"
+	clickhouse-client -q 'SELECT foo.one AS one FROM (SELECT 1 AS one ) AS foo WHERE one = 1 FORMAT PrettyCompact'
+	echo "3) CREATE DATABASE qwe"
+	clickhouse-client -q 'CREATE DATABASE qwe'
+	echo "4) SHOW DATABASES"
+	clickhouse-client -q 'SHOW DATABASES FORMAT PrettyCompact'
+	echo "5) DROP DATABASE qwe"
+	clickhouse-client -q 'DROP DATABASE qwe'
+	echo "6) SHOW DATABASES"
+	clickhouse-client -q 'SHOW DATABASES FORMAT PrettyCompact'
 
 else
 	# unknown command
