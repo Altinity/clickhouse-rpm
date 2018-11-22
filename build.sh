@@ -99,7 +99,11 @@ function install_general_dependencies()
 function install_rpm_dependencies()
 {
         banner "RPM build dependencies"
-	sudo yum install -y rpm-build redhat-rpm-config createrepo
+	if os_fedora; then
+		sudo dnf install -y rpm-build redhat-rpm-config createrepo dnf-plugin-builddep
+	else
+		sudo yum install -y rpm-build redhat-rpm-config createrepo yum-utils
+	fi
 }
 
 ##
