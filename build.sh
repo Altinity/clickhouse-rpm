@@ -99,15 +99,19 @@ function install_general_dependencies()
 function install_rpm_dependencies()
 {
         banner "RPM build dependencies"
-	sudo yum install -y rpm-build redhat-rpm-config createrepo
+	if os_fedora; then
+		sudo dnf install -y rpm-build redhat-rpm-config createrepo dnf-plugin-builddep
+	else
+		sudo yum install -y rpm-build redhat-rpm-config createrepo yum-utils
+	fi
 }
 
 ##
 ##
 ##
-function install_mysql_libs()
+function install_mariadb_repo()
 {
-	banner "Install MySQL client library"
+	banner "Install MariaDB client library"
 
 	# which repo should be used:
 	#   http://yum.mariadb.org/10.2/fedora26-amd64
@@ -128,49 +132,24 @@ baseurl=${MARIADB_REPO_URL}
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF"
-	# install RPMs using newly created repo file
-	sudo yum install -y MariaDB-devel MariaDB-shared
 }
 
 ##
 ##
 ##
-function install_build_process_dependencies()
+function install_build_process_dependencies_repo()
 {
-	banner "Install build tools"
-
-	sudo yum install -y m4 make
+	banner "Install build tools repo"
 
 	if os_centos; then
 		sudo yum install -y epel-release
-		sudo yum install -y cmake3
-
 		sudo yum install -y centos-release-scl
-		sudo yum install -y devtoolset-7
 	elif os_ol; then
+		sudo yum install -y epel-release
 		sudo yum install -y scl-utils
-		sudo yum install -y devtoolset-7
-		sudo yum install -y cmake3
-	else
+	#else
 		# fedora
-		sudo yum install -y gcc-c++ libstdc++-static cmake
 	fi
-
-	banner "Install CH dev dependencies"
-
-	# libicu-devel -  ICU (support for collations and charset conversion functions
-	# libtool-ltdl-devel - cooperate with dynamic libs
-	sudo yum install -y zlib-devel openssl-devel libicu-devel libtool-ltdl-devel unixODBC-devel readline-devel
-}
-
-##
-##
-##
-function install_workarounds()
-{
-	banner "Install workarounds"
-
-	# Now all workarounds are included into CMAKE_OPTIONS and MAKE_OPTIONS
 }
 
 ##
@@ -182,10 +161,14 @@ function install_dependencies()
 
 	install_general_dependencies
 	install_rpm_dependencies
-	install_mysql_libs
-	install_build_process_dependencies
-
-	install_workarounds
+	install_mariadb_repo
+	install_build_process_dependencies_repo
+	build_spec_file
+	if os_fedora; then
+		sudo dnf builddep "$SPECS_DIR/clickhouse.spec"
+	else
+		sudo yum-builddep "$SPECS_DIR/clickhouse.spec"
+	fi
 }
 
 ##
@@ -388,22 +371,6 @@ function build_RPMs()
 	echo '%_topdir '"$RPMBUILD_DIR"'
 %_tmppath '"$TMP_DIR"'
 %_smp_mflags  -j'"$THREADS" > ~/.rpmmacros
-
-	banner "Setup path to compilers"
-	if os_centos || os_ol; then
-		export CMAKE=cmake3
-		export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
-		export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
-		#export CXXFLAGS="${CXXFLAGS} -Wno-maybe-uninitialized"
-	else
-		export CMAKE=cmake
-		export CC=gcc
-		export CXX=g++
-	fi
-
-	echo "CMAKE=$CMAKE"
-	echo "CC=$CC"
-	echo "CXX=$CXX"
 
 	echo "cd into $CWD_DIR"
 	cd "$CWD_DIR"

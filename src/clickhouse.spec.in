@@ -43,6 +43,14 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 Vendor: Yandex
 Packager: Altinity
 Url: https://clickhouse.yandex/
+BuildRequires: libicu-devel libtool-ltdl-devel unixODBC-devel readline-devel MariaDB-devel make
+%if 0%{?rhel} == 6 || 0%{?rhel} == 7
+BuildRequires: devtoolset-7-gcc devtoolset-7-gcc-c++ cmake3
+%define cmake cmake3
+%else
+BuildRequires: gcc gcc-c++ cmake
+%define cmake cmake
+%endif
 
 %description
 ClickHouse is an open-source column-oriented database management
@@ -131,11 +139,14 @@ fi
 
 %build
 # we are in BUILD/ClickHouse-%{version}-@CH_TAG@ folder now
+%if 0%{?rhel} == 6 || 0%{?rhel} == 7
+. /opt/rh/devtoolset-7/enable
+%endif
 
 rm -rf build
 mkdir build
 cd build
-$CMAKE .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release @CMAKE_OPTIONS@
+%{cmake} .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo @CMAKE_OPTIONS@
 make %{?_smp_mflags} @MAKE_OPTIONS@
 cd ..
 
@@ -144,12 +155,15 @@ cd ..
 ##
 
 %install
+%if 0%{?rhel} == 6 || 0%{?rhel} == 7
+. /opt/rh/devtoolset-7/enable
+%endif
 rm -rf %{buildroot}
 
 cd build
 DAEMONS="clickhouse clickhouse-test clickhouse-compressor clickhouse-client clickhouse-server"
 for daemon in $DAEMONS; do \
-        DESTDIR=%{buildroot} $CMAKE -DCOMPONENT=$daemon -P cmake_install.cmake; \
+        DESTDIR=%{buildroot} %{cmake} -DCOMPONENT=$daemon -P cmake_install.cmake; \
 done
 cd ..
 
