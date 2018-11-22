@@ -28,7 +28,7 @@
 # limitations under the License.
 
 # Git version of ClickHouse that we package
-CH_VERSION="${CH_VERSION:-18.14.13}"
+CH_VERSION="${CH_VERSION:-18.14.15}"
 
 # Git tag marker (stable/testing)
 CH_TAG="${CH_TAG:-stable}"
