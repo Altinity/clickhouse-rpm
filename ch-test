@@ -1,0 +1,32 @@
+clickhouse-test requires some Python modules
+
+sudo yum install epel-release
+sudo yum install python-lxml
+sudo yum install python-requests
+
+sudo yum install python2-pip
+sudo pip install termcolor
+
+===========================
+
+We need ctest in order to run tests. ctest is available in cmake package from llvm
+
+sudo yum install llvm-toolset-7-cmake
+
+/opt/rh/llvm-toolset-7/root/usr/bin/cmake3
+/opt/rh/llvm-toolset-7/root/usr/bin/ctest3
+
+However, normal ctest looks like has ctest3 as well
+probably no need in llvm-cmake
+
+[user@localhost clickhouse-rpm]$ which ctest3
+/usr/bin/ctest3
+[user@localhost clickhouse-rpm]$ rpm -qf `which ctest3`
+cmake3-3.12.2-1.el7.x86_64
+
+
+run test suite
+
+/opt/rh/llvm-toolset-7/root/usr/bin/ctest3 -j8 -V
+env TEST_OPT="--skip 00700_decimal_math 00463_long_sessions_in_http_interface 00428_partition 00281_compile_sizeof_packed" /opt/rh/llvm-toolset-7/root/usr/bin/ctest3 -j8 -V
+

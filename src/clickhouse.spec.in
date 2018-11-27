@@ -38,7 +38,7 @@ Release: 1%{?dist}
 Source: ClickHouse-@CH_VERSION@-@CH_TAG@.zip
 License: Apache License 2.0
 Group: Applications/Databases
-BuildRoot: %{_tmppath}/%{name}-%{version}-build
+#BuildRoot: %{_tmppath}/%{name}-%{version}-build
 # Prefix: %{_prefix}
 Vendor: Yandex
 Packager: Altinity
@@ -108,20 +108,41 @@ This package contains test suite for ClickHouse DBMS
 # Ensure source code is in BUILD/ClickHouse-%{version}-@CH_TAG@ folder
 # Prepare source code for being built
 
-if [ "${MYSRC}" == "yes" ]; then
+if [ "${REBUILD_RPMS}" == "yes" ]; then
+	echo "Rebuild RPMs from existing sources in rpmbuild/BUILD"
 	# Prepare sources 'as is', for example, from 'git clone'
 	# Sources are already expected to be located in BUILD/ClickHouse-%{version}-@CH_TAG@
 	# and would be used 'as is'. This is the way to go in case you need to modify sources
-	# 1. Do not delete BUILD/ClickHouse-%{version}-@CH_TAG@ folder
-	# 2. Do not copy sources .zip from SOURCES, do not unpack .zip archive into BUILD/, 
-	# 3. just cd into BUILD/ClickHouse-%{version}-@CH_TAG@ - it has to be here
-%setup -D -T -n ClickHouse-%{version}-@CH_TAG@
+
+	# rpmbuild/BUILD
+	cd "${BUILD_DIR}"
+
+	# Jump into rpmbuild/BUILD/ch_sources_dir and fix flags
+	cd ClickHouse-%{version}-@CH_TAG@
+	/usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
+
 else
+	echo "Build RPMs from SOURCES/.zip file"
 	# Prepare sources from .zip release source file
 	# 1. Delete BUILD/ClickHouse-%{version}-@CH_TAG@ folder
 	# 2. copy .zip file from SOURSES to BUILD, unpack .zip file. Important .zip file has to have ClickHouse-%{version}-@CH_TAG@ folder inside
 	# 3. cd into BUILD/ClickHouse-%{version}-@CH_TAG@, which is expected to be in .zip file
-%setup -q -n ClickHouse-%{version}-@CH_TAG@
+
+	# rpmbuild/BUILD
+	cd "${BUILD_DIR}"
+
+	# Remove dir and .zip file
+	rm -rf ClickHouse-%{version}-@CH_TAG@
+	rm -rf ClickHouse-%{version}-@CH_TAG@.zip
+
+	# Copy .zip file from rpmbuild/SOURCES into rpmbuild/BUILD, unpack and remove .zip
+	cp -f "${SOURCES_DIR}"/ClickHouse-%{version}-@CH_TAG@.zip .
+	unzip -q ClickHouse-%{version}-@CH_TAG@.zip
+	rm -rf ClickHouse-%{version}-@CH_TAG@.zip
+
+	# Jump into rpmbuild/BUILD/ch_sources_dir and fix flags
+	cd ClickHouse-%{version}-@CH_TAG@
+	/usr/bin/chmod -Rf a+rX,u+w,g-w,o-w .
 fi
 
 
@@ -130,13 +151,31 @@ fi
 ##
 
 %build
-# we are in BUILD/ClickHouse-%{version}-@CH_TAG@ folder now
+echo "Start build"
 
-rm -rf build
-mkdir build
+# Jump into rpmbuild/BUILD/ClickHouse-%{version}-@CH_TAG@ folder now
+cd "${BUILD_DIR}"
+cd ClickHouse-%{version}-@CH_TAG@
+
+# Clear build folder, but keep 'rpmbuild' subfolder in it (if exists)
+mkdir -p build
 cd build
+ls | grep -v 'rpmbuild' | xargs rm -rf
+
 $CMAKE .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE:STRING=Release @CMAKE_OPTIONS@
 make %{?_smp_mflags} @MAKE_OPTIONS@
+MAKE_EXIT_CODE=$?
+
+echo "make reported exit code ${MAKE_EXIT_CODE}"
+
+if [ "${TEST_BINARIES}" == "yes" ]; then
+	echo "Running test"
+	set +e
+	bash -c "ctest3 -j8"
+	CTEST_EXIT_CODE=$?
+	echo "ctest reported exit code ${CTEST_EXIT_CODE}"
+fi
+
 cd ..
 
 ##
@@ -144,7 +183,13 @@ cd ..
 ##
 
 %install
+
+# %{buildroot} = rpmbuild/BUILDROOT/clickhouse-18.14.15-1.el7.x86_64
 rm -rf %{buildroot}
+
+# Jump into rpmbuild/BUILD/ClickHouse-%{version}-@CH_TAG@ folder now
+cd "${BUILD_DIR}"
+cd ClickHouse-%{version}-@CH_TAG@
 
 cd build
 DAEMONS="clickhouse clickhouse-test clickhouse-compressor clickhouse-client clickhouse-server"
@@ -153,7 +198,8 @@ for daemon in $DAEMONS; do \
 done
 cd ..
 
-# create folders structure to be distributed
+# Create folders structure to be distributed
+# %{buildroot} = rpmbuild/BUILDROOT/clickhouse-18.14.15-1.el7.x86_64
 mkdir -p %{buildroot}/etc/clickhouse-server
 mkdir -p %{buildroot}/etc/clickhouse-client
 mkdir -p %{buildroot}/etc/init.d
@@ -164,18 +210,20 @@ mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/share/clickhouse/bin
 mkdir -p %{buildroot}/usr/share/clickhouse/headers
 
-# copy files from source into folders structure for distribution
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.init	%{buildroot}/etc/init.d/clickhouse-server
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse-server.cron.d	%{buildroot}/etc/cron.d/clickhouse-server
-cp %{_builddir}/%{buildsubdir}/debian/clickhouse.limits		%{buildroot}/etc/security/limits.d/clickhouse.conf
-cp %{_builddir}/%{buildsubdir}/dbms/programs/server/config.xml	%{buildroot}/etc/clickhouse-server/
-cp %{_builddir}/%{buildsubdir}/dbms/programs/server/users.xml	%{buildroot}/etc/clickhouse-server/
+# Copy files from source into folders structure for distribution
+# BUILDDIR = rpmbuild/BUILD
+cp "${BUILD_DIR}"/ClickHouse-%{version}-@CH_TAG@/debian/clickhouse-server.init   %{buildroot}/etc/init.d/clickhouse-server
+cp "${BUILD_DIR}"/ClickHouse-%{version}-@CH_TAG@/debian/clickhouse-server.cron.d %{buildroot}/etc/cron.d/clickhouse-server
+cp "${BUILD_DIR}"/ClickHouse-%{version}-@CH_TAG@/debian/clickhouse.limits        %{buildroot}/etc/security/limits.d/clickhouse.conf
+cp "${BUILD_DIR}"/ClickHouse-%{version}-@CH_TAG@/dbms/programs/server/config.xml %{buildroot}/etc/clickhouse-server/
+cp "${BUILD_DIR}"/ClickHouse-%{version}-@CH_TAG@/dbms/programs/server/users.xml  %{buildroot}/etc/clickhouse-server/
 
 ##
 ## clean stage
 ##
 
 %clean
+# %{buildroot} = rpmbuild/BUILDROOT/clickhouse-18.14.15-1.el7.x86_64
 rm -rf %{buildroot}
 
 ##
