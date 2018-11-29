@@ -11,30 +11,52 @@ Run `build.sh` on any RHEL 6 or RHEL 7 based distribution and get ClickHouse sou
 ```bash
 Usage:
 
-./build.sh version        - display default version to build
+./builder version
+		display default version to build
 
-./build.sh all            - most popular point of entry - the same as idep_all
+./builder all
+		install build deps, download sources, build RPMs
+./builder all --test
+		install build+test deps, download sources, build+test and test RPMs
 
-./build.sh idep_all       - install dependencies from RPMs, download CH sources and build RPMs
-./build.sh bdep_all       - build dependencies from sources, download CH sources and build RPMs
-                            !!! YOU MAY NEED TO UNDERSTAND INTERNALS !!!
+./builder install --build-deps
+		install build dependencies
+./builder install --test-deps
+		install test dependencies
+./builder install --deps
+		install all dependencies (both build and test)
+./builder install --rpms [--from-sources]
+		install RPMs, if available (do not build RPMs)
 
-./build.sh install_deps   - just install dependencies (do not download sources, do not build RPMs)
-./build.sh build_deps     - just build dependencies (do not download sources, do not build RPMs)
-./build.sh src            - just download sources
-./build.sh spec           - just create SPEC file (do not download sources, do not build RPMs)
-./build.sh packages       - download sources, create SPEC file and build RPMs (do not install dependencies)
-./build.sh rpms           - just build RPMs from .zip sourcesi
-                            (do not download sources, do not create SPEC file, do not install dependencies)
-MYSRC=yes ./build.sh rpms - just build RPMs from unpacked sources - most likely you have modified them
-                            (do not download sources, do not create SPEC file, do not install dependencies)
+./builder build --spec
+		just create SPEC file
+		do not download sources, do not build RPMs
+./builder build --rpms [--test]
+		download sources, build SPEC file, build RPMs
+		do not install dependencies
+./builder build --rpms --from-archive [--test]
+		just build RPMs from .zip sources
+		(do not download sources, do not create SPEC file, do not install dependencies)
+./builder build --rpms --from-unpacked-archive [--test]
+		just build RPMs from unpacked sources - most likely you have modified them
+		(do not download sources, do not create SPEC file, do not install dependencies)
+./builder build --rpms --from-sources [--test]
+		build from source codes
 
-./build.sh publish packagecloud <packagecloud USER ID> - publish packages on packagecloud as USER
-./build.sh delete packagecloud <packagecloud USER ID>  - delete packages on packagecloud as USER
+./builder test --docker [--from-sources]
+./builder test --local
+./builder test --local-sql
 
-./build.sh publish ssh - publish packages via SSH
+./builder repo --publish --packagecloud=<packagecloud USER ID>
+		publish packages on packagecloud as USER
+./builder repo --delete  --packagecloud=<packagecloud USER ID>
+		delete packages on packagecloud as USER
+
+./builder src --download
+		just download sources
+
 ```
 
-In most cases just run `./build.sh all`
+In most cases just run `./builder all`
 
 
