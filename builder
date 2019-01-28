@@ -216,6 +216,7 @@ function install_clickhouse_test_deps()
 
 	# Install dependencies required by test scripts to be run by clickhouse-test
 	sudo yum install -y perl
+	sudo yum install -y telnet
 }
 
 ##
@@ -530,7 +531,7 @@ function run_test_docker()
 
 	banner "Running Docker image ${IMAGE_NAME}"
 	#sudo docker run -it --mount src="$(pwd)",target=/clickhouse/result,type=bind $IMAGE_NAME
-	sudo docker run --mount src="$TMP_DIR",target=/clickhouse/result,type=bind $IMAGE_NAME
+	sudo docker run --mount src="$TMP_DIR",target=/clickhouse/result,type=bind -e CH_TEST_NAMES="$CH_TEST_NAMES" $IMAGE_NAME
 
 	cd $CWD_DIR
 	

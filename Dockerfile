@@ -1,5 +1,9 @@
 FROM centos:latest
 
+# set timezone
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+
 # Create work & result dirs
 RUN mkdir -p /clickhouse
 RUN mkdir -p /clickhouse/result
@@ -20,6 +24,9 @@ RUN pip install termcolor
 # Install dependencies required by test scripts
 RUN yum install -y perl
 RUN yum install -y sudo
+RUN yum install -y telnet
+RUN yum install -y centos-release-scl
+RUN yum install -y devtoolset-7
 
 # Install main script
 COPY /runscript.sh /clickhouse/
